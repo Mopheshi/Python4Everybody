@@ -20,7 +20,7 @@ def crawl(url, count, position):
         # Finding all anchor tags in the parsed HTML
         tags = soup('a')
         # Selecting the tag based on the given position
-        tag = tags[int(position)]
+        tag = tags[int(position) - 1]
 
         # Fetching the href attribute from the selected tag
         tag.get('href', None)
