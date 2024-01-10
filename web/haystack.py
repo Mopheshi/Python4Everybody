@@ -1,6 +1,6 @@
 import re
 
-fh = open("files/actual.txt", "r")
+fh = open("../files/actual.txt", "r")
 number = numbers = []
 
 for line in fh:
