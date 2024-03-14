@@ -4,6 +4,7 @@ import sqlite3
 conn = sqlite3.connect('../files/tracksdb.sqlite')
 cur = conn.cursor()
 
+# Drop existing tables if they exist
 cur.executescript('''
 DROP TABLE IF EXISTS Artist;
 DROP TABLE IF EXISTS Genre;
@@ -37,14 +38,19 @@ CREATE TABLE Track (
 );
 ''')
 
+# Open the CSV file containing track information
 handle = open('../files/tracks.csv')
 
+# Iterate over each line in the CSV file
 for line in handle:
-    line = line.strip()
-    pieces = line.split(',')
+    line = line.strip()  # Remove leading/trailing whitespaces
+    pieces = line.split(',')  # Split the line by comma
 
-    if len(pieces) < 7: continue
+    # Skip lines with incomplete data
+    if len(pieces) < 7:
+        continue
 
+    # Extract data from each column in the CSV
     name = pieces[0]
     artist = pieces[1]
     album = pieces[2]
@@ -53,22 +59,34 @@ for line in handle:
     length = pieces[5]
     genre = pieces[6]
 
+    # Print track information
     print(name, artist, album, count, rating, length, genre)
 
+    # Insert or ignore the artist into the Artist table
     cur.execute('INSERT OR IGNORE INTO Artist (name) VALUES (?)', (artist,))
+    # Retrieve the artist's ID
     cur.execute('SELECT id FROM Artist WHERE name = ?', (artist,))
     artist_id = cur.fetchone()[0]
 
+    # Insert or ignore the genre into the Genre table
     cur.execute('INSERT OR IGNORE INTO Genre (name) VALUES (?)', (genre,))
+    # Retrieve the genre's ID
     cur.execute('SELECT id FROM Genre WHERE name = ?', (genre,))
     genre_id = cur.fetchone()[0]
 
+    # Insert or ignore the album into the Album table
     cur.execute('INSERT OR IGNORE INTO Album (title, artist_id) VALUES (?, ?)', (album, artist_id,))
+    # Retrieve the album's ID
     cur.execute('SELECT id FROM Album WHERE title = ?', (album,))
     album_id = cur.fetchone()[0]
 
+    # Insert or replace the track into the Track table
     cur.execute(
         'INSERT OR REPLACE INTO Track (title, album_id, genre_id, len, rating, count) VALUES (?, ?, ?, ?, ?, ?)',
         (name, album_id, genre_id, length, rating, count))
 
+    # Commit the changes to the database
     conn.commit()
+
+# Close the database connection
+conn.close()
