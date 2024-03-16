@@ -40,7 +40,7 @@ if len(fname) < 1:
 #     ],
 #     [
 #         "Mea",
-#         "si110",
+#         "si120",
 #         0
 #     ]
 # ]
@@ -65,3 +65,5 @@ for entry in json_data:
     cur.execute('INSERT OR REPLACE INTO Member (user_id, course_id) VALUES (?, ?)', (user_id, course_id))
 
     conn.commit()
+
+conn.close()
