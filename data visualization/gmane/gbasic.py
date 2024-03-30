@@ -4,7 +4,7 @@ import zlib
 
 howmany = int(input("How many to dump? "))
 
-conn = sqlite3.connect('index.sqlite')
+conn = sqlite3.connect('../../files/index.sqlite')
 cur = conn.cursor()
 
 cur.execute('SELECT id, sender FROM Senders')

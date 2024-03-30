@@ -3,7 +3,7 @@ import time
 import urllib.request, urllib.parse, urllib.error
 import zlib
 
-conn = sqlite3.connect('index.sqlite')
+conn = sqlite3.connect('../../files/index.sqlite')
 cur = conn.cursor()
 
 cur.execute('SELECT id, sender FROM Senders')

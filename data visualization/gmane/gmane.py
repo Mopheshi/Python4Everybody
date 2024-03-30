@@ -64,7 +64,7 @@ ctx = ssl.create_default_context()
 ctx.check_hostname = False
 ctx.verify_mode = ssl.CERT_NONE
 
-conn = sqlite3.connect('content.sqlite')
+conn = sqlite3.connect('../../files/content.sqlite')
 cur = conn.cursor()
 
 baseurl = "http://mbox.dr-chuck.net/sakai.devel/"
