@@ -13,47 +13,49 @@ except:
 dnsmapping = dict()
 mapping = dict()
 
-def fixsender(sender,allsenders=None) :
+
+def fixsender(sender, allsenders=None):
     global dnsmapping
     global mapping
-    if sender is None : return None
+    if sender is None: return None
     sender = sender.strip().lower()
-    sender = sender.replace('<','').replace('>','')
+    sender = sender.replace('<', '').replace('>', '')
 
     # Check if we have a hacked gmane.org from address
-    if allsenders is not None and sender.endswith('gmane.org') :
+    if allsenders is not None and sender.endswith('gmane.org'):
         pieces = sender.split('-')
         realsender = None
         for s in allsenders:
-            if s.startswith(pieces[0]) :
+            if s.startswith(pieces[0]):
                 realsender = sender
                 sender = s
                 # print(realsender, sender)
                 break
-        if realsender is None :
+        if realsender is None:
             for s in mapping:
-                if s.startswith(pieces[0]) :
+                if s.startswith(pieces[0]):
                     realsender = sender
                     sender = mapping[s]
                     # print(realsender, sender)
                     break
-        if realsender is None : sender = pieces[0]
+        if realsender is None: sender = pieces[0]
 
     mpieces = sender.split("@")
-    if len(mpieces) != 2 : return sender
+    if len(mpieces) != 2: return sender
     dns = mpieces[1]
     x = dns
     pieces = dns.split(".")
-    if dns.endswith(".edu") or dns.endswith(".com") or dns.endswith(".org") or dns.endswith(".net") :
+    if dns.endswith(".edu") or dns.endswith(".com") or dns.endswith(".org") or dns.endswith(".net"):
         dns = ".".join(pieces[-2:])
     else:
         dns = ".".join(pieces[-3:])
     # if dns != x : print(x,dns)
     # if dns != dnsmapping.get(dns,dns) : print(dns,dnsmapping.get(dns,dns))
-    dns = dnsmapping.get(dns,dns)
+    dns = dnsmapping.get(dns, dns)
     return mpieces[0] + '@' + dns
 
-def parsemaildate(md) :
+
+def parsemaildate(md):
     # See if we have dateutil
     try:
         pdate = parser.parse(md)
@@ -69,16 +71,16 @@ def parsemaildate(md) :
 
     # Try a bunch of format variations - strptime() is *lame*
     dnotz = None
-    for form in [ '%d %b %Y %H:%M:%S', '%d %b %Y %H:%M:%S',
-        '%d %b %Y %H:%M', '%d %b %Y %H:%M', '%d %b %y %H:%M:%S',
-        '%d %b %y %H:%M:%S', '%d %b %y %H:%M', '%d %b %y %H:%M' ] :
+    for form in ['%d %b %Y %H:%M:%S', '%d %b %Y %H:%M:%S',
+                 '%d %b %Y %H:%M', '%d %b %Y %H:%M', '%d %b %y %H:%M:%S',
+                 '%d %b %y %H:%M:%S', '%d %b %y %H:%M', '%d %b %y %H:%M']:
         try:
             dnotz = datetime.strptime(notz, form)
             break
         except:
             continue
 
-    if dnotz is None :
+    if dnotz is None:
         # print('Bad Date:',md)
         return None
 
@@ -87,26 +89,27 @@ def parsemaildate(md) :
     tz = "+0000"
     try:
         tz = pieces[4]
-        ival = int(tz) # Only want numeric timezone values
-        if tz == '-0000' : tz = '+0000'
+        ival = int(tz)  # Only want numeric timezone values
+        if tz == '-0000': tz = '+0000'
         tzh = tz[:3]
         tzm = tz[3:]
-        tz = tzh+":"+tzm
+        tz = tzh + ":" + tzm
     except:
         pass
 
-    return iso+tz
+    return iso + tz
+
 
 # Parse out the info...
 def parseheader(hdr, allsenders=None):
-    if hdr is None or len(hdr) < 1 : return None
+    if hdr is None or len(hdr) < 1: return None
     sender = None
     x = re.findall('\nFrom: .* <(\S+@\S+)>\n', hdr)
-    if len(x) >= 1 :
+    if len(x) >= 1:
         sender = x[0]
     else:
         x = re.findall('\nFrom: (\S+@\S+)\n', hdr)
-        if len(x) >= 1 :
+        if len(x) >= 1:
             sender = x[0]
 
     # normalize the domain name of Email addresses
@@ -115,7 +118,7 @@ def parseheader(hdr, allsenders=None):
     date = None
     y = re.findall('\nDate: .*, (.*)\n', hdr)
     sent_at = None
-    if len(y) >= 1 :
+    if len(y) >= 1:
         tdate = y[0]
         tdate = tdate[:26]
         try:
@@ -126,15 +129,16 @@ def parseheader(hdr, allsenders=None):
 
     subject = None
     z = re.findall('\nSubject: (.*)\n', hdr)
-    if len(z) >= 1 : subject = z[0].strip().lower()
+    if len(z) >= 1: subject = z[0].strip().lower()
 
     guid = None
     z = re.findall('\nMessage-ID: (.*)\n', hdr)
-    if len(z) >= 1 : guid = z[0].strip().lower()
+    if len(z) >= 1: guid = z[0].strip().lower()
 
-    if sender is None or sent_at is None or subject is None or guid is None :
+    if sender is None or sent_at is None or subject is None or guid is None:
         return None
     return (guid, sender, subject, sent_at)
+
 
 conn = sqlite3.connect('index.sqlite')
 cur = conn.cursor()
@@ -159,12 +163,12 @@ conn_1 = sqlite3.connect('mapping.sqlite')
 cur_1 = conn_1.cursor()
 
 cur_1.execute('''SELECT old,new FROM DNSMapping''')
-for message_row in cur_1 :
+for message_row in cur_1:
     dnsmapping[message_row[0].strip().lower()] = message_row[1].strip().lower()
 
 mapping = dict()
 cur_1.execute('''SELECT old,new FROM Mapping''')
-for message_row in cur_1 :
+for message_row in cur_1:
     old = fixsender(message_row[0])
     new = fixsender(message_row[1])
     mapping[old] = fixsender(new)
@@ -178,14 +182,14 @@ cur_1 = conn_1.cursor()
 
 allsenders = list()
 cur_1.execute('''SELECT email FROM Messages''')
-for message_row in cur_1 :
+for message_row in cur_1:
     sender = fixsender(message_row[0])
-    if sender is None : continue
-    if 'gmane.org' in sender : continue
+    if sender is None: continue
+    if 'gmane.org' in sender: continue
     if sender in allsenders: continue
     allsenders.append(sender)
 
-print("Loaded allsenders",len(allsenders),"and mapping",len(mapping),"dns mapping",len(dnsmapping))
+print("Loaded allsenders", len(allsenders), "and mapping", len(mapping), "dns mapping", len(dnsmapping))
 
 cur_1.execute('''SELECT headers, body, sent_at
     FROM Messages ORDER BY sent_at''')
@@ -196,60 +200,61 @@ guids = dict()
 
 count = 0
 
-for message_row in cur_1 :
+for message_row in cur_1:
     hdr = message_row[0]
     parsed = parseheader(hdr, allsenders)
     if parsed is None: continue
     (guid, sender, subject, sent_at) = parsed
 
     # Apply the sender mapping
-    sender = mapping.get(sender,sender)
+    sender = mapping.get(sender, sender)
 
     count = count + 1
-    if count % 250 == 1 : print(count,sent_at, sender)
+    if count % 250 == 1: print(count, sent_at, sender)
     # print(guid, sender, subject, sent_at)
 
     if 'gmane.org' in sender:
         print("Error in sender ===", sender)
 
-    sender_id = senders.get(sender,None)
-    subject_id = subjects.get(subject,None)
-    guid_id = guids.get(guid,None)
+    sender_id = senders.get(sender, None)
+    subject_id = subjects.get(subject, None)
+    guid_id = guids.get(guid, None)
 
-    if sender_id is None :
-        cur.execute('INSERT OR IGNORE INTO Senders (sender) VALUES ( ? )', ( sender, ) )
+    if sender_id is None:
+        cur.execute('INSERT OR IGNORE INTO Senders (sender) VALUES ( ? )', (sender,))
         conn.commit()
-        cur.execute('SELECT id FROM Senders WHERE sender=? LIMIT 1', ( sender, ))
+        cur.execute('SELECT id FROM Senders WHERE sender=? LIMIT 1', (sender,))
         try:
             row = cur.fetchone()
             sender_id = row[0]
             senders[sender] = sender_id
         except:
-            print('Could not retrieve sender id',sender)
+            print('Could not retrieve sender id', sender)
             break
-    if subject_id is None :
-        cur.execute('INSERT OR IGNORE INTO Subjects (subject) VALUES ( ? )', ( subject, ) )
+    if subject_id is None:
+        cur.execute('INSERT OR IGNORE INTO Subjects (subject) VALUES ( ? )', (subject,))
         conn.commit()
-        cur.execute('SELECT id FROM Subjects WHERE subject=? LIMIT 1', ( subject, ))
+        cur.execute('SELECT id FROM Subjects WHERE subject=? LIMIT 1', (subject,))
         try:
             row = cur.fetchone()
             subject_id = row[0]
             subjects[subject] = subject_id
         except:
-            print('Could not retrieve subject id',subject)
+            print('Could not retrieve subject id', subject)
             break
     # print(sender_id, subject_id)
-    cur.execute('INSERT OR IGNORE INTO Messages (guid,sender_id,subject_id,sent_at,headers,body) VALUES ( ?,?,?,datetime(?),?,? )',
-            ( guid, sender_id, subject_id, sent_at,
-            zlib.compress(message_row[0].encode()), zlib.compress(message_row[1].encode())) )
+    cur.execute(
+        'INSERT OR IGNORE INTO Messages (guid,sender_id,subject_id,sent_at,headers,body) VALUES ( ?,?,?,datetime(?),?,? )',
+        (guid, sender_id, subject_id, sent_at,
+         zlib.compress(message_row[0].encode()), zlib.compress(message_row[1].encode())))
     conn.commit()
-    cur.execute('SELECT id FROM Messages WHERE guid=? LIMIT 1', ( guid, ))
+    cur.execute('SELECT id FROM Messages WHERE guid=? LIMIT 1', (guid,))
     try:
         row = cur.fetchone()
         message_id = row[0]
         guids[guid] = message_id
     except:
-        print('Could not retrieve guid id',guid)
+        print('Could not retrieve guid id', guid)
         break
 
 cur.close()
